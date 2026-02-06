@@ -1,0 +1,2 @@
+file,begin,end,speaker,overall_log_likelihood,speech_log_likelihood,phone_duration_deviation,snr
+harvard,0.0,18.356190476190477,data,-48.86758748638344,-51.19480155125137,2.510866567871406,9.821949147684293

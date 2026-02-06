@@ -1,0 +1,86 @@
+the	DH
+the	TH
+the	TH IY0
+stale	S T EY1 L
+smell	S M EH1 L
+of	AA1 F
+of	AH0 V
+of	AH1 V
+of	AO0 F
+of	AO1 F
+old	OW1 L D
+it	IH0 T
+it	IH1 T
+beer	B IH1 R
+beer	B IY1 ER0
+lingers	L IH1 NG G ER0 Z
+heat	HH IY1 T
+to	T OW0
+takes	T EY1 K S
+the	DH
+the	TH
+the	TH IY0
+out	AW0 T
+out	AW1 T
+out	AW2 T
+a	AA1
+a	AH0
+odor	OW1 D ER0
+bring	B R IH1 NG
+dip	D IH1 P
+cold	K OW1 L D
+cold	K OW2 L D
+and	AE0 N D
+and	AE1 N D
+and	AE2 N D
+and	AH0 N D
+zest	Z EH1 S T
+restores	R IH0 S T AO1 R Z
+health	HH EH1 L TH
+a	AA1
+a	AH0
+salt	S AO1 L T
+pickle	P IH1 K AH0 L
+fine	F AY1 N
+fine	F AY2 N
+tastes	T EY1 S T S
+with	W IH0 DH
+with	W IH0 TH
+with	W IH1 TH
+al	AA0 L
+al	AA1 L
+al	AE1 L
+al	AH0 L
+ham	HH AE0 M
+ham	HH AE1 M
+ham	HH AH0 M
+are	AA1 R
+are	AA1 R IY0
+are	EH1 R
+are	EH1 R IY0
+are	ER0
+tacos	T AA1 K OW0 S
+tacos	T AA1 K OW0 Z
+tacos	T AA1 K OW2 Z
+my	M IY0
+a	AA1
+a	AH0
+pastor	P AE1 S T ER0
+food	F UW1 D
+favorite	F EY1 V ER0 AY2 T
+favorite	F EY1 V R AH0 T
+is	AY1 Z
+is	IH0 S
+is	IH0 Z
+is	IH1 S
+is	IH1 Z
+is	IY1 S
+the	DH
+the	TH
+the	TH IY0
+zestful	Z EH1 S T F AH0 L
+hot	HH AA1 T
+hot	HH AH0 T
+bun	B AH0 N
+bun	B AH1 N
+cross	K R AO1 S

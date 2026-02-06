@@ -1,0 +1,1 @@
+run this to get timestamped phonetics in output folder: "mfa align data english_mfa english_mfa output"
