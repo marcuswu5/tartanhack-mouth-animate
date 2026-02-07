@@ -1,0 +1,451 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: white;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+}
+
+.container {
+    text-align: center;
+    padding: 2rem;
+    padding-top: 3rem;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    letter-spacing: 0.05em;
+}
+
+.title-text {
+    display: inline-block;
+}
+
+.description {
+    margin-top: 2rem;
+    font-size: 1.1rem;
+    color: #666;
+    line-height: 1.6;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    font-weight: 400;
+}
+
+.upload-section {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.upload-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.drive-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    width: 48px;
+    height: 48px;
+}
+
+.drive-button:hover {
+    background: #f5f5f5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.drive-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.drive-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.submit-section {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.submit-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.submit-button {
+    padding: 1rem 3rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    background: #000;
+    border: 2px solid #000;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.submit-button:hover {
+    background: #333;
+    border-color: #333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.submit-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading page */
+.loading-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.loading-page.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 2rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    letter-spacing: 0.05em;
+}
+
+.upload-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.upload-button:hover {
+    border-color: #000;
+    color: #000;
+    background: #f5f5f5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.upload-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+}
+
+.checkmark-icon {
+    width: 18px;
+    height: 18px;
+    stroke: #22c55e;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+    margin-left: 0.25rem;
+}
+
+.upload-button.uploaded .checkmark-icon {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.remove-button {
+    background: none;
+    border: none;
+    padding: 4px;
+    margin: 0;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+    color: #ef4444;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.remove-button:focus {
+    outline: 2px solid #ef4444;
+    outline-offset: 2px;
+}
+
+.upload-button.uploaded .remove-button {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.remove-button:hover {
+    color: #dc2626;
+    background: rgba(239, 68, 68, 0.1);
+    transform: scale(1.1);
+}
+
+.remove-button:active {
+    transform: scale(0.95);
+}
+
+.remove-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+}
+
+.mouth-container {
+    display: inline-block;
+    width: 100px;
+    height: 80px;
+    position: relative;
+    vertical-align: middle;
+}
+
+.mouth {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.upper-lip,
+.lower-lip,
+.inner-mouth {
+    transition: d 0.1s ease-in-out;
+}
+
+/* Animation states - talking */
+.mouth.talking .upper-lip {
+    animation: upperLipTalk 0.25s ease-in-out infinite;
+}
+
+.mouth.talking .lower-lip {
+    animation: lowerLipTalk 0.25s ease-in-out infinite;
+}
+
+.mouth.talking .inner-mouth {
+    animation: innerMouthTalk 0.25s ease-in-out infinite;
+}
+
+@keyframes upperLipTalk {
+    0%, 100% {
+        d: path("M 20 35 Q 50 25 80 35");
+    }
+    25% {
+        d: path("M 20 35 Q 50 28 80 35");
+    }
+    50% {
+        d: path("M 20 35 Q 50 32 80 35");
+    }
+    75% {
+        d: path("M 20 35 Q 50 28 80 35");
+    }
+}
+
+@keyframes lowerLipTalk {
+    0%, 100% {
+        d: path("M 20 35 Q 50 45 80 35");
+    }
+    25% {
+        d: path("M 20 35 Q 50 48 80 35");
+    }
+    50% {
+        d: path("M 20 35 Q 50 55 80 35");
+    }
+    75% {
+        d: path("M 20 35 Q 50 48 80 35");
+    }
+}
+
+@keyframes innerMouthTalk {
+    0%, 100% {
+        d: path("M 20 35 Q 50 40 80 35");
+        opacity: 0;
+    }
+    25% {
+        d: path("M 20 35 Q 50 42 80 35");
+        opacity: 0.3;
+    }
+    50% {
+        d: path("M 20 35 Q 50 50 80 35");
+        opacity: 0.6;
+    }
+    75% {
+        d: path("M 20 35 Q 50 42 80 35");
+        opacity: 0.3;
+    }
+}
+
+/* Smiling state */
+.mouth.smiling .upper-lip {
+    d: path("M 20 35 Q 50 20 80 35");
+}
+
+.mouth.smiling .lower-lip {
+    d: path("M 20 35 Q 50 50 80 35");
+}
+
+.mouth.smiling .inner-mouth {
+    opacity: 0;
+}
+
+/* Open state */
+.mouth.open .upper-lip {
+    d: path("M 20 35 Q 50 30 80 35");
+}
+
+.mouth.open .lower-lip {
+    d: path("M 20 35 Q 50 60 80 35");
+}
+
+.mouth.open .inner-mouth {
+    d: path("M 20 35 Q 50 50 80 35");
+    opacity: 0.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .title {
+        font-size: 1.8rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .mouth-container {
+        width: 80px;
+        height: 64px;
+    }
+    
+    .description {
+        font-size: 0.95rem;
+        padding: 0 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .upload-item {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .upload-button {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+    }
+    
+    .upload-icon {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .drive-button {
+        width: 100%;
+        height: 40px;
+    }
+    
+    .drive-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .submit-button {
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+    }
+    
+    .loading-text {
+        font-size: 1.2rem;
+    }
+    
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border-width: 3px;
+    }
+}
