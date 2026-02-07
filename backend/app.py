@@ -14,6 +14,9 @@ except ImportError:
     print("Warning: opencv-python not installed. Video frame extraction will not work.")
     print("Install it with: pip install opencv-python")
 
+# Audio conversion uses ffmpeg directly via subprocess
+# No Python library dependencies needed, just ffmpeg must be installed
+
 app = Flask(__name__)
 # Enable CORS for frontend - allow requests from any origin (for development)
 # In production, restrict this to your actual frontend domain
@@ -202,6 +205,79 @@ def extract_video_frames(video_path, output_folder, fps=24):
         traceback.print_exc()
         return frame_paths
 
+def convert_audio_to_wav(input_audio_path, output_wav_path, sample_rate=44100, channels=2):
+    """
+    Convert audio file to WAV format using ffmpeg.
+    
+    Args:
+        input_audio_path: Path to input audio file
+        output_wav_path: Path to save output WAV file
+        sample_rate: Sample rate for output WAV (default 44100 Hz)
+        channels: Number of channels (1=mono, 2=stereo, default 2)
+    
+    Returns:
+        True if conversion successful, False otherwise
+    """
+    import subprocess
+    
+    try:
+        print(f"Converting audio to WAV: {input_audio_path}")
+        print(f"  Output: {output_wav_path}")
+        print(f"  Sample rate: {sample_rate} Hz")
+        print(f"  Channels: {channels}")
+        
+        # Build ffmpeg command
+        # -i: input file
+        # -ar: audio sample rate
+        # -ac: audio channels
+        # -y: overwrite output file if it exists
+        # -f wav: output format
+        ffmpeg_cmd = [
+            'ffmpeg',
+            '-i', input_audio_path,
+            '-ar', str(sample_rate),
+            '-ac', str(channels),
+            '-f', 'wav',
+            '-y',  # Overwrite output file
+            output_wav_path
+        ]
+        
+        print(f"  Running: {' '.join(ffmpeg_cmd)}")
+        
+        # Run ffmpeg
+        result = subprocess.run(
+            ffmpeg_cmd,
+            capture_output=True,
+            text=True,
+            timeout=300  # 5 minute timeout
+        )
+        
+        if result.returncode == 0 and os.path.exists(output_wav_path):
+            file_size = os.path.getsize(output_wav_path) / (1024 * 1024)  # Size in MB
+            print(f"✓ Successfully converted audio to WAV")
+            print(f"  - Output file size: {file_size:.2f} MB")
+            return True
+        else:
+            print(f"Error: ffmpeg conversion failed")
+            if result.stderr:
+                print(f"  Error output: {result.stderr}")
+            return False
+            
+    except FileNotFoundError:
+        print("Error: ffmpeg not found. Please install ffmpeg:")
+        print("  macOS: brew install ffmpeg")
+        print("  Linux: sudo apt-get install ffmpeg")
+        print("  Windows: Download from https://ffmpeg.org/download.html")
+        return False
+    except subprocess.TimeoutExpired:
+        print("Error: Audio conversion timed out (exceeded 5 minutes)")
+        return False
+    except Exception as e:
+        print(f"Error converting audio to WAV: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 @app.errorhandler(413)
 def request_entity_too_large(error):
     return jsonify({'error': 'File too large. Maximum size is 500MB'}), 413
@@ -226,6 +302,9 @@ def submit_files():
         audio_file = request.files.get('audio')
         face_reference_file = request.files.get('face_reference')
         frame_files = request.files.getlist('frames')
+        
+        # Store original audio filename for later use
+        original_audio_filename = audio_file.filename if audio_file and audio_file.filename else None
         
         print(f"Video file: {video_file.filename if video_file else 'None'}")
         print(f"Audio file: {audio_file.filename if audio_file else 'None'}")
@@ -279,12 +358,61 @@ def submit_files():
         audio_path = save_file(audio_file, 'audio', animation_id, animation_folder)
         print(f"Audio saved to: {audio_path}")
         
+        if not audio_path:
+            return jsonify({'error': 'Failed to save audio file'}), 500
+        
+        # Convert audio to WAV format
+        print("Converting audio to WAV format...")
+        audio_folder = os.path.join(animation_folder, 'audio')
+        wav_path = os.path.join(audio_folder, 'audio.wav')
+        
+        conversion_success = convert_audio_to_wav(audio_path, wav_path)
+        
+        if conversion_success:
+            # Use the WAV file path instead of original
+            audio_path = wav_path
+            print(f"Using converted WAV file: {audio_path}")
+            
+            # Copy WAV file to aligner/data directory
+            import shutil
+            
+            # Get the project root directory (one level up from backend/)
+            backend_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(backend_dir)
+            aligner_data_dir = os.path.join(project_root, 'aligner', 'data')
+            
+            # Create aligner/data directory if it doesn't exist
+            os.makedirs(aligner_data_dir, exist_ok=True)
+            
+            # Copy WAV file to aligner/data with animation_id as filename
+            aligner_wav_filename = f"{animation_id}.wav"
+            aligner_wav_path = os.path.join(aligner_data_dir, aligner_wav_filename)
+            shutil.copy2(wav_path, aligner_wav_path)
+            print(f"✓ Copied WAV file to aligner/data: {aligner_wav_path}")
+            
+            # Create a text file with the audio file name
+            audio_txt_filename = f"{animation_id}.txt"
+            audio_txt_path = os.path.join(aligner_data_dir, audio_txt_filename)
+            with open(audio_txt_path, 'w') as f:
+                f.write(f"{aligner_wav_filename}\n")
+            print(f"✓ Created text file: {audio_txt_path}")
+            
+            # Write original audio file name to audionames.txt (overwrite with single line)
+            audionames_file = os.path.join(project_root, 'audionames.txt')
+            if original_audio_filename:
+                with open(audionames_file, 'w') as f:
+                    f.write(f"{original_audio_filename}\n")
+                print(f"✓ Updated audionames.txt with: {original_audio_filename}")
+            else:
+                print("Warning: Could not get original audio filename")
+        else:
+            print("Warning: Audio conversion to WAV failed. Using original audio file.")
+            # Continue with original file if conversion fails
+        
         print("Saving face reference file...")
         face_reference_path = save_file(face_reference_file, 'face_reference', animation_id, animation_folder)
         print(f"Face reference saved to: {face_reference_path}")
         
-        if not audio_path:
-            return jsonify({'error': 'Failed to save audio file'}), 500
         if not face_reference_path:
             return jsonify({'error': 'Failed to save face reference file'}), 500
         

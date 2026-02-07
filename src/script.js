@@ -385,9 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
                 .then(data => {
                     console.log('Files uploaded successfully:', data);
-                    // Handle success
-                    alert('Files uploaded successfully! Animation ID: ' + data.animation_id);
-                    // You could redirect to a results page or show a success message
+                    // Handle success - files uploaded, processing continues
                 })
                 .catch(error => {
                     console.error('Upload error:', error);
