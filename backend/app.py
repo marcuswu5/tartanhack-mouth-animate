@@ -6,6 +6,14 @@ from datetime import datetime
 import uuid
 from werkzeug.utils import secure_filename
 
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+    print("Warning: opencv-python not installed. Video frame extraction will not work.")
+    print("Install it with: pip install opencv-python")
+
 app = Flask(__name__)
 # Enable CORS for frontend - allow requests from any origin (for development)
 # In production, restrict this to your actual frontend domain
@@ -109,6 +117,91 @@ def save_file(file, file_type, animation_id, animation_folder, frame_index=None)
         return file_path
     return None
 
+def extract_video_frames(video_path, output_folder, fps=24):
+    """
+    Extract all frames from a video and save them as PNG files.
+    
+    Args:
+        video_path: Path to the video file
+        output_folder: Folder to save extracted frames
+        fps: Frames per second of the video (default 24)
+    
+    Returns:
+        List of paths to extracted frame files
+    """
+    frame_paths = []
+    
+    if not CV2_AVAILABLE:
+        print("Error: opencv-python is not installed. Cannot extract frames.")
+        return frame_paths
+    
+    try:
+        # Create output folder if it doesn't exist
+        os.makedirs(output_folder, exist_ok=True)
+        
+        # Open video file
+        cap = cv2.VideoCapture(video_path)
+        
+        if not cap.isOpened():
+            print(f"Error: Could not open video file {video_path}")
+            return frame_paths
+        
+        # Get video properties for verification
+        video_fps = cap.get(cv2.CAP_PROP_FPS)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        duration_seconds = total_frames / video_fps if video_fps > 0 else 0
+        
+        print(f"Extracting frames from video: {video_path}")
+        print(f"Video properties:")
+        print(f"  - Resolution: {video_width}x{video_height}")
+        print(f"  - Actual FPS: {video_fps:.2f}")
+        print(f"  - Expected FPS: {fps}")
+        print(f"  - Total frames in video: {total_frames}")
+        print(f"  - Duration: {duration_seconds:.2f} seconds")
+        
+        frame_count = 0
+        frame_number = 0
+        
+        while True:
+            ret, frame = cap.read()
+            
+            if not ret:
+                break
+            
+            # Save frame as PNG
+            frame_filename = f"frame_{frame_number+1:06d}.png"
+            frame_path = os.path.join(output_folder, frame_filename)
+            success = cv2.imwrite(frame_path, frame)
+            
+            if success and os.path.exists(frame_path):
+                frame_paths.append(frame_path)
+                frame_number += 1
+                # Print progress every 30 frames
+                if frame_number % 30 == 0:
+                    print(f"  Extracted {frame_number} frames...")
+            else:
+                print(f"Warning: Failed to save frame {frame_number+1}")
+            
+            frame_count += 1
+        
+        cap.release()
+        
+        print(f"✓ Successfully extracted {len(frame_paths)} frames from video")
+        print(f"  - Saved to: {output_folder}")
+        if total_frames > 0:
+            extraction_rate = (len(frame_paths) / total_frames) * 100
+            print(f"  - Extraction rate: {extraction_rate:.1f}% ({len(frame_paths)}/{total_frames} frames)")
+        
+        return frame_paths
+        
+    except Exception as e:
+        print(f"Error extracting frames from video: {e}")
+        import traceback
+        traceback.print_exc()
+        return frame_paths
+
 @app.errorhandler(413)
 def request_entity_too_large(error):
     return jsonify({'error': 'File too large. Maximum size is 500MB'}), 413
@@ -169,6 +262,19 @@ def submit_files():
         video_path = save_file(video_file, 'video', animation_id, animation_folder)
         print(f"Video saved to: {video_path}")
         
+        if not video_path:
+            return jsonify({'error': 'Failed to save video file'}), 500
+        
+        # Extract frames from video (24 fps)
+        print("Extracting frames from video...")
+        video_frames_folder = os.path.join(animation_folder, 'video_frames')
+        extracted_frame_paths = extract_video_frames(video_path, video_frames_folder, fps=24)
+        
+        if len(extracted_frame_paths) == 0:
+            print("Warning: No frames extracted from video")
+        else:
+            print(f"Successfully extracted {len(extracted_frame_paths)} frames from video")
+        
         print("Saving audio file...")
         audio_path = save_file(audio_file, 'audio', animation_id, animation_folder)
         print(f"Audio saved to: {audio_path}")
@@ -177,8 +283,6 @@ def submit_files():
         face_reference_path = save_file(face_reference_file, 'face_reference', animation_id, animation_folder)
         print(f"Face reference saved to: {face_reference_path}")
         
-        if not video_path:
-            return jsonify({'error': 'Failed to save video file'}), 500
         if not audio_path:
             return jsonify({'error': 'Failed to save audio file'}), 500
         if not face_reference_path:
@@ -213,12 +317,19 @@ def submit_files():
                 VALUES (?, ?, ?, ?, ?)
             ''', (animation_id, video_path, audio_path, face_reference_path, 'uploaded'))
             
-            # Insert frame records
+            # Insert frame records (user-uploaded frames)
             for frame_path, frame_order in frame_paths:
                 c.execute('''
                     INSERT INTO frames (animation_id, frame_path, frame_order)
                     VALUES (?, ?, ?)
                 ''', (animation_id, frame_path, frame_order))
+            
+            # Insert extracted video frame records
+            for idx, extracted_frame_path in enumerate(extracted_frame_paths):
+                c.execute('''
+                    INSERT INTO frames (animation_id, frame_path, frame_order)
+                    VALUES (?, ?, ?)
+                ''', (animation_id, extracted_frame_path, idx + 10000))  # Use high order number to distinguish from user frames
             
             conn.commit()
             print(f"Database updated successfully. Animation ID: {animation_id}")
@@ -247,6 +358,48 @@ def submit_files():
 def health_check():
     """Health check endpoint to verify server is running"""
     return jsonify({'status': 'ok', 'message': 'Server is running', 'port': 5001}), 200
+
+@app.route('/api/animations/<animation_id>/frames', methods=['GET'])
+def get_video_frames(animation_id):
+    """Get information about extracted video frames for an animation"""
+    animation_folder = os.path.join(UPLOAD_FOLDER, animation_id)
+    video_frames_folder = os.path.join(animation_folder, 'video_frames')
+    
+    if not os.path.exists(video_frames_folder):
+        return jsonify({'error': 'Video frames folder not found'}), 404
+    
+    # Get all frame files
+    frame_files = sorted([f for f in os.listdir(video_frames_folder) if f.endswith('.png')])
+    frame_count = len(frame_files)
+    
+    # Get video file info
+    video_folder = os.path.join(animation_folder, 'video')
+    video_files = [f for f in os.listdir(video_folder) if f.startswith('video.')] if os.path.exists(video_folder) else []
+    video_path = os.path.join(video_folder, video_files[0]) if video_files else None
+    
+    video_info = {}
+    if video_path and CV2_AVAILABLE and os.path.exists(video_path):
+        try:
+            cap = cv2.VideoCapture(video_path)
+            if cap.isOpened():
+                video_info = {
+                    'fps': float(cap.get(cv2.CAP_PROP_FPS)),
+                    'total_frames': int(cap.get(cv2.CAP_PROP_FRAME_COUNT)),
+                    'width': int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                    'height': int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+                    'duration_seconds': int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) / cap.get(cv2.CAP_PROP_FPS) if cap.get(cv2.CAP_PROP_FPS) > 0 else 0
+                }
+                cap.release()
+        except Exception as e:
+            print(f"Error getting video info: {e}")
+    
+    return jsonify({
+        'animation_id': animation_id,
+        'extracted_frame_count': frame_count,
+        'frame_files': frame_files[:10],  # First 10 frame filenames
+        'video_info': video_info,
+        'frames_folder': video_frames_folder
+    }), 200
 
 @app.route('/api/animations/<animation_id>', methods=['GET'])
 def get_animation(animation_id):
