@@ -22,6 +22,8 @@ RUN conda install -y -c conda-forge \
     python-multipart \
  && conda clean -afy
 
+RUN python -m pip install mytextgrid
+
 # Create directories
 RUN mkdir -p /app /data /mfa
 

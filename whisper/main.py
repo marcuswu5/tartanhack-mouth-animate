@@ -4,6 +4,7 @@ import whisper
 import os
 import logging
 import sys
+import string
 
 # Path to the cache where the model is stored
 cache_path = "/root/.cache"
@@ -25,18 +26,23 @@ def transcribe(req: TranscribeRequest):
     global model
     if model is None:
         print("Loading model...")
-        model = whisper.load_model("turbo", download_root=cache_path)
+        model = whisper.load_model("turbo", download_root=cache_path, local_files_only=True)
         print("Model loaded!")
     if not os.path.exists(req.audio_path):
         msg = f"Audio file not found: {req.audio_path}"
         raise HTTPException(status_code=400, detail=msg)
-    try:
-        result = model.transcribe(req.audio_path)
-        text = result.get("text", "")
-        with open(req.output_path, "w", encoding="utf-8") as f:
-            f.write(text)
-        print("Transcription completed, wrote to %s", req.output_path)
-        return {"status": "ok", "text": text}
-    except Exception as e:
-        print("Transcription failed: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+    
+    val = req.audio_path.split('.')[0]
+    filename = val
+
+    input_file = "/data/" + filename + ".mp3"
+
+    model = whisper.load_model("turbo")
+    result = model.transcribe(input_file)
+
+    result = result['text'].lower()
+    result = result.translate(str.maketrans('', '', string.punctuation)).strip()
+
+
+    with open("/data/audio-transcript/" + filename + ".txt", "w") as file:
+        file.write(result)

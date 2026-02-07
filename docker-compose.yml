@@ -29,3 +29,4 @@ services:
     volumes:
       - ./aligner:/app
       - ./shared-data:/data
+      - ./model-cache/mfa:/mfa

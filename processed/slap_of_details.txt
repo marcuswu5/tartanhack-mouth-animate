@@ -1,0 +1,6 @@
+Input:slap.jpg
+Input full path:/home/openface-build/slap.jpg
+Camera parameters:345.312,345.312,264,133.5
+Output HOG:slap.hog
+Output image:slap.jpg
+Output aligned directory:slap_aligned

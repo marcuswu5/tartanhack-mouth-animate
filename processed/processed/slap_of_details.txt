@@ -1,0 +1,13 @@
+Input:slap.mp4
+Input full path:/home/openface-build/slap.mp4
+Camera parameters:1312.5,1312.5,960,540
+Output HOG:slap.hog
+Output video:slap.avi
+Output aligned directory:slap_aligned
+Output csv:slap.csv
+Gaze: 1
+AUs: 1
+Landmarks 2D: 1
+Landmarks 3D: 1
+Pose: 1
+Shape parameters: 1
