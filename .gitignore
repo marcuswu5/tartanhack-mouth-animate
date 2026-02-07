@@ -1,2 +1,11 @@
 model-cache/
-shared-data/
+shared-data/audios/*
+!shared-data/audios/.gitkeep
+shared-data/alignments/*
+!shared-data/alignments/.gitkeep
+shared-data/transcripts/*
+!shared-data/transcripts/.gitkeep
+__pycache__/
+*.pyc
+.env
+.git

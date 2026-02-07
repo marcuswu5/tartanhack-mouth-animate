@@ -4,9 +4,10 @@ import os
 import json
 
 # File paths
-audio_path = os.path.join(os.path.dirname(__file__), "aligner", "data", "harvard.wav")
-transcript_path = os.path.join(os.path.dirname(__file__), "shared-data", "test_transcript.txt")
-alignment_path = os.path.join(os.path.dirname(__file__), "shared-data", "test_alignment.json")
+shared_data = "data"
+audio_path = "/data/audios/harvard.mp3"
+transcript_path = "/data/transcripts/test_transcript.txt"
+alignment_path = "/data/alignments/test_alignment.json"
 
 # API URLs
 WHISPER_URL = "http://localhost:8001/transcribe"
