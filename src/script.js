@@ -5,6 +5,15 @@ class MouthAnimator {
         this.lowerLip = mouthElement.querySelector('.lower-lip');
         this.innerMouth = mouthElement.querySelector('.inner-mouth');
         this.isAnimating = false;
+        
+        // Check if elements were found
+        if (!this.upperLip || !this.lowerLip || !this.innerMouth) {
+            console.warn('Mouth elements not found:', {
+                upperLip: !!this.upperLip,
+                lowerLip: !!this.lowerLip,
+                innerMouth: !!this.innerMouth
+            });
+        }
     }
 
     startTalking() {
@@ -36,16 +45,28 @@ class MouthAnimator {
         this.stopTalking();
         this.mouth.classList.remove('smiling', 'open');
         // Reset to neutral closed mouth
-        this.upperLip.setAttribute('d', 'M 20 35 Q 50 25 80 35');
-        this.lowerLip.setAttribute('d', 'M 20 35 Q 50 45 80 35');
-        this.innerMouth.setAttribute('d', 'M 20 35 Q 50 40 80 35');
-        this.innerMouth.setAttribute('opacity', '0');
+        if (this.upperLip) {
+            this.upperLip.setAttribute('d', 'M 20 35 Q 50 25 80 35');
+        }
+        if (this.lowerLip) {
+            this.lowerLip.setAttribute('d', 'M 20 35 Q 50 45 80 35');
+        }
+        if (this.innerMouth) {
+            this.innerMouth.setAttribute('d', 'M 20 35 Q 50 40 80 35');
+            this.innerMouth.setAttribute('opacity', '0');
+        }
     }
 }
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     const mouthElement = document.querySelector('.mouth');
+    
+    if (!mouthElement) {
+        console.error('Mouth element not found in DOM');
+        return;
+    }
+    
     const animator = new MouthAnimator(mouthElement);
 
     // Auto-start talking animation
@@ -104,16 +125,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const audioUploadInput = document.getElementById('audioUpload');
     const framesUploadButton = document.getElementById('framesUploadButton');
     const framesUploadInput = document.getElementById('framesUpload');
+    const faceReferenceUploadButton = document.getElementById('faceReferenceUploadButton');
+    const faceReferenceUploadInput = document.getElementById('faceReferenceUpload');
 
     // Function to check if all files are uploaded and show/hide submit button
     function checkAllFilesUploaded() {
         const videoUploaded = videoUploadButton && videoUploadButton.classList.contains('uploaded');
         const audioUploaded = audioUploadButton && audioUploadButton.classList.contains('uploaded');
         const framesUploaded = framesUploadButton && framesUploadButton.classList.contains('uploaded');
+        const faceReferenceUploaded = faceReferenceUploadButton && faceReferenceUploadButton.classList.contains('uploaded');
         
         const submitSection = document.querySelector('.submit-section');
         if (submitSection) {
-            if (videoUploaded && audioUploaded && framesUploaded) {
+            if (videoUploaded && audioUploaded && framesUploaded && faceReferenceUploaded) {
                 submitSection.classList.add('visible');
             } else {
                 submitSection.classList.remove('visible');
@@ -122,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Video upload functionality
-
     if (videoUploadButton && videoUploadInput) {
         videoUploadButton.addEventListener('click', (e) => {
             // Don't trigger if clicking the remove button
@@ -141,8 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Video file selected:', file.name, file.type, file.size);
                 videoUploadButton.classList.add('uploaded');
                 checkAllFilesUploaded();
-                // You can add file handling logic here
-                // For example, preview, validation, or upload to server
             }
         });
 
@@ -170,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Audio upload functionality
-
     if (audioUploadButton && audioUploadInput) {
         audioUploadButton.addEventListener('click', (e) => {
             // Don't trigger if clicking the remove button
@@ -189,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Audio file selected:', file.name, file.type, file.size);
                 audioUploadButton.classList.add('uploaded');
                 checkAllFilesUploaded();
-                // You can add file handling logic here
             }
         });
 
@@ -217,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Mouth frames upload functionality
-
     if (framesUploadButton && framesUploadInput) {
         framesUploadButton.addEventListener('click', (e) => {
             // Don't trigger if clicking the remove button
@@ -239,7 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 framesUploadButton.classList.add('uploaded');
                 checkAllFilesUploaded();
-                // You can add file handling logic here
             }
         });
 
@@ -266,6 +283,51 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Frames upload elements not found:', { framesUploadButton, framesUploadInput });
     }
 
+    // Face reference upload functionality
+    if (faceReferenceUploadButton && faceReferenceUploadInput) {
+        faceReferenceUploadButton.addEventListener('click', (e) => {
+            // Don't trigger if clicking the remove button
+            if (e.target.closest('.remove-button')) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Face reference upload button clicked');
+            faceReferenceUploadInput.click();
+        });
+
+        faceReferenceUploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                console.log('Face reference file selected:', file.name, file.type, file.size);
+                faceReferenceUploadButton.classList.add('uploaded');
+                checkAllFilesUploaded();
+            }
+        });
+
+        // Remove file functionality
+        const faceReferenceRemoveButton = document.getElementById('faceReferenceRemoveButton');
+        if (faceReferenceRemoveButton) {
+            faceReferenceRemoveButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                faceReferenceUploadInput.value = '';
+                faceReferenceUploadButton.classList.remove('uploaded');
+                checkAllFilesUploaded();
+                console.log('Face reference file removed');
+            });
+            // Allow Enter key to trigger remove
+            faceReferenceRemoveButton.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    faceReferenceRemoveButton.click();
+                }
+            });
+        }
+    } else {
+        console.error('Face reference upload elements not found:', { faceReferenceUploadButton, faceReferenceUploadInput });
+    }
+
     // Submit button functionality
     const submitButton = document.getElementById('submitButton');
     const loadingPage = document.getElementById('loadingPage');
@@ -280,12 +342,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const videoFile = videoUploadInput?.files[0];
             const audioFile = audioUploadInput?.files[0];
             const frameFiles = framesUploadInput?.files;
+            const faceReferenceFile = faceReferenceUploadInput?.files[0];
             
-            if (videoFile && audioFile && frameFiles && frameFiles.length > 0) {
+            if (videoFile && audioFile && frameFiles && frameFiles.length > 0 && faceReferenceFile) {
                 console.log('All files ready for submission:');
                 console.log('  Video:', videoFile.name);
                 console.log('  Audio:', audioFile.name);
                 console.log('  Frames:', frameFiles.length, 'file(s)');
+                console.log('  Face Reference:', faceReferenceFile.name);
                 
                 // Hide main container and show loading page
                 if (mainContainer) {
@@ -295,132 +359,51 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadingPage.classList.add('visible');
                 }
                 
-                // You can add submission logic here
-                // For example, create FormData and send to server:
-                // const formData = new FormData();
-                // formData.append('video', videoFile);
-                // formData.append('audio', audioFile);
-                // for (let i = 0; i < frameFiles.length; i++) {
-                //     formData.append('frames', frameFiles[i]);
-                // }
-                // fetch('/api/submit', { method: 'POST', body: formData })
-                //     .then(response => response.json())
-                //     .then(data => {
-                //         // Handle success - maybe redirect or show result
-                //     })
-                //     .catch(error => {
-                //         // Handle error - hide loading page and show error
-                //         loadingPage.classList.remove('visible');
-                //         mainContainer.style.display = 'block';
-                //     });
-            }
-        });
-    }
-
-    // Google Drive integration
-    // Note: You'll need to set up Google API credentials and get an API key
-    // Replace 'YOUR_API_KEY' with your actual Google API key
-    const API_KEY = 'YOUR_API_KEY';
-    const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
-    let pickerApiLoaded = false;
-    let oauthToken = null;
-
-    function loadPicker() {
-        gapi.load('auth', { callback: onAuthApiLoad });
-        gapi.load('picker', { callback: onPickerApiLoad });
-    }
-
-    function onAuthApiLoad() {
-        window.gapi.auth.authorize({
-            'client_id': 'YOUR_CLIENT_ID',
-            'scope': ['https://www.googleapis.com/auth/drive.readonly']
-        }, handleAuthResult);
-    }
-
-    function onPickerApiLoad() {
-        pickerApiLoaded = true;
-        createPicker();
-    }
-
-    function handleAuthResult(authResult) {
-        if (authResult && !authResult.error) {
-            oauthToken = authResult.access_token;
-            createPicker();
-        }
-    }
-
-    function createPicker(fileType, callback) {
-        if (pickerApiLoaded && oauthToken) {
-            const view = new google.picker.DocsView(google.picker.ViewId.DOCS);
-            
-            // Set file type filter
-            if (fileType === 'video') {
-                view.setMimeTypes('video/*');
-            } else if (fileType === 'audio') {
-                view.setMimeTypes('audio/*');
-            } else if (fileType === 'image') {
-                view.setMimeTypes('image/*');
-            }
-
-            const picker = new google.picker.PickerBuilder()
-                .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-                .setOAuthToken(oauthToken)
-                .addView(view)
-                .setCallback((data) => {
-                    if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
-                        const docs = data[google.picker.Response.DOCUMENTS];
-                        if (callback) {
-                            callback(docs);
-                        }
-                    }
+                // Create FormData and send files to server
+                const formData = new FormData();
+                formData.append('video', videoFile);
+                formData.append('audio', audioFile);
+                formData.append('face_reference', faceReferenceFile);
+                for (let i = 0; i < frameFiles.length; i++) {
+                    formData.append('frames', frameFiles[i]);
+                }
+                
+                // Use the backend server URL - change port here if you changed it in app.py
+                const API_URL = 'http://localhost:5001/api/submit';
+                
+                fetch(API_URL, { 
+                    method: 'POST', 
+                    body: formData 
                 })
-                .build();
-            picker.setVisible(true);
-        }
-    }
-
-    // Simplified Google Drive button handlers (using Google Picker API)
-    function handleDriveButtonClick(fileType, uploadButton, uploadInput) {
-        // For now, show a message that Google Drive integration needs API setup
-        // In production, you would:
-        // 1. Set up Google Cloud Console project
-        // 2. Enable Google Drive API
-        // 3. Get API key and OAuth client ID
-        // 4. Initialize the picker
-        
-        alert('Google Drive integration requires API setup. Please configure your Google API credentials in script.js');
-        
-        // Uncomment and configure when you have API credentials:
-        // loadPicker();
-        // createPicker(fileType, (docs) => {
-        //     // Handle selected files from Google Drive
-        //     // You would need to download the files using Drive API
-        //     // and then set them to the file input
-        //     console.log('Selected from Google Drive:', docs);
-        // });
-    }
-
-    // Video Drive button
-    const videoDriveButton = document.getElementById('videoDriveButton');
-    if (videoDriveButton) {
-        videoDriveButton.addEventListener('click', () => {
-            handleDriveButtonClick('video', videoUploadButton, videoUploadInput);
-        });
-    }
-
-    // Audio Drive button
-    const audioDriveButton = document.getElementById('audioDriveButton');
-    if (audioDriveButton) {
-        audioDriveButton.addEventListener('click', () => {
-            handleDriveButtonClick('audio', audioUploadButton, audioUploadInput);
-        });
-    }
-
-    // Frames Drive button
-    const framesDriveButton = document.getElementById('framesDriveButton');
-    if (framesDriveButton) {
-        framesDriveButton.addEventListener('click', () => {
-            handleDriveButtonClick('image', framesUploadButton, framesUploadInput);
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || `Server error: ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Files uploaded successfully:', data);
+                    // Handle success
+                    alert('Files uploaded successfully! Animation ID: ' + data.animation_id);
+                    // You could redirect to a results page or show a success message
+                })
+                .catch(error => {
+                    console.error('Upload error:', error);
+                    // Handle error - hide loading page and show error
+                    loadingPage.classList.remove('visible');
+                    mainContainer.style.display = 'block';
+                    
+                    let errorMessage = 'Error uploading files. ';
+                    if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION')) {
+                        errorMessage += 'Make sure the backend server is running on http://localhost:5001';
+                    } else {
+                        errorMessage += error.message;
+                    }
+                    alert(errorMessage);
+                });
+            }
         });
     }
 });
