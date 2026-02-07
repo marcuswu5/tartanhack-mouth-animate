@@ -1,0 +1,28 @@
+
+services:
+  api:
+    build: ./api
+    container_name: api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./shared-data:/data
+    depends_on:
+      - whisper
+      - aligner
+
+  whisper:
+    build: ./whisper
+    ports:
+      - "8001:8001"   # expose container port 8001 to host port 8001
+    volumes:
+      - ./model-cache:/root/.cache
+      - ./whisper/testfiles:/app/testfiles
+      - ./shared-data:/app/data
+    environment:
+      - XDG_CACHE_HOME=/root/.cache
+
+  aligner:
+    build: ./aligner
+    ports:
+      - "8002:8000"   # container runs on 8000 internally, host maps to 8002
